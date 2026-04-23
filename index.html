@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Кешірім сұрау</title>
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        background: #fdf6f6;
+        text-align: center;
+    }
+
+    h1 {
+        font-size: 40px;
+    }
+
+    h2 {
+        margin-top: 20px;
+    }
+
+    .buttons {
+        margin-top: 30px;
+        position: relative;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 18px;
+        margin: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    #yes {
+        background: #4CAF50;
+        color: white;
+    }
+
+    #no {
+        background: #f44336;
+        color: white;
+        position: relative;
+    }
+</style>
+</head>
+<body>
+
+<h1>Балнур мені кешірші</h1>
+<h2>Кешіресін ба?</h2>
+
+<div class="buttons">
+    <button id="yes">Да</button>
+    <button id="no">Нет</button>
+</div>
+
+<script>
+let yesBtn = document.getElementById("yes");
+let noBtn = document.getElementById("no");
+
+let scale = 1;
+
+noBtn.addEventListener("click", () => {
+    // увеличиваем кнопку "Да"
+    scale += 0.2;
+    yesBtn.style.transform = `scale(${scale})`;
+
+    // двигаем кнопку "Нет" случайно
+    let x = Math.random() * 300 - 150;
+    let y = Math.random() * 300 - 150;
+    noBtn.style.transform = `translate(${x}px, ${y}px)`;
+});
+
+yesBtn.addEventListener("click", () => {
+    alert("Рахмет ❤️");
+});
+</script>
+
+</body>
+</html>
