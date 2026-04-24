@@ -3,40 +3,78 @@
 <head>
 <meta charset="UTF-8">
 <title>Shadow Fight Mini PRO</title>
-<style>
-body { margin:0; background:black; overflow:hidden; font-family:sans-serif; }
-canvas { display:block; margin:auto; background:linear-gradient(#111,#444); }
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<style>
+body {
+  margin:0;
+  background:black;
+  overflow:hidden;
+  font-family:sans-serif;
+}
+
+canvas {
+  display:block;
+  background:linear-gradient(#111,#444);
+}
+
+/* управление */
 #controls {
   position: fixed;
-  bottom: 10px;
+  bottom: 40px;
+  left: 0;
   width: 100%;
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
 }
+
+.group {
+  display:flex;
+  gap:10px;
+}
+
 button {
-  font-size: 18px;
-  margin: 5px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: none;
+  font-size: 20px;
+  padding: 15px;
+  border-radius: 12px;
+  border:none;
+  background:#222;
+  color:white;
 }
 </style>
 </head>
+
 <body>
 
-<canvas id="game" width="400" height="250"></canvas>
+<canvas id="game"></canvas>
 
 <div id="controls">
-  <button ontouchstart="press('left')" ontouchend="release('left')">⬅️</button>
-  <button ontouchstart="press('right')" ontouchend="release('right')">➡️</button>
-  <button ontouchstart="attack()">👊</button>
-  <button ontouchstart="kick()">🦵</button>
+  <div class="group">
+    <button ontouchstart="press('left')" ontouchend="release('left')">⬅️</button>
+    <button ontouchstart="press('right')" ontouchend="release('right')">➡️</button>
+  </div>
+
+  <div class="group">
+    <button ontouchstart="attack()">👊</button>
+    <button ontouchstart="kick()">🦵</button>
+  </div>
 </div>
 
 <script>
 const c = document.getElementById("game");
 const ctx = c.getContext("2d");
 
+// адаптивный экран
+function resizeCanvas(){
+  c.width = window.innerWidth;
+  c.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+// управление
 let keys = {};
 function press(k){ keys[k]=true; }
 function release(k){ keys[k]=false; }
@@ -44,17 +82,18 @@ function release(k){ keys[k]=false; }
 document.addEventListener("keydown", e => keys[e.key]=true);
 document.addEventListener("keyup", e => keys[e.key]=false);
 
-// игрок и враг
+// персонажи
 let player, enemy;
 let round = 1;
 let gameOver = false;
 
 function resetRound(){
-  player = {x:50, y:180, hp:300, attacking:false};
-  enemy = {x:300, y:180, hp:500};
+  player = {x:50, y:c.height-70, hp:300, attacking:false};
+  enemy = {x:c.width-80, y:c.height-70, hp:500};
 }
 resetRound();
 
+// рисование персонажа (силуэт)
 function drawStick(x,y,attack=false,color="white"){
   ctx.strokeStyle=color;
   ctx.lineWidth=3;
@@ -88,9 +127,8 @@ function drawStick(x,y,attack=false,color="white"){
   ctx.stroke();
 }
 
-// эффекты
+// эффекты ударов
 let hits = [];
-
 function addHit(x,y){
   hits.push({x,y,life:10});
 }
@@ -99,13 +137,13 @@ function update(){
   if(gameOver) return;
 
   // движение
-  if(keys["ArrowRight"] || keys["right"]) player.x+=2;
-  if(keys["ArrowLeft"] || keys["left"]) player.x-=2;
+  if(keys["ArrowRight"] || keys["right"]) player.x+=3;
+  if(keys["ArrowLeft"] || keys["left"]) player.x-=3;
 
-  // атака (клавиатура)
+  // атака
   if(keys[" "]){
     player.attacking=true;
-    if(Math.abs(player.x-enemy.x)<40){
+    if(Math.abs(player.x-enemy.x)<50){
       enemy.hp-=0.5;
       addHit(enemy.x, enemy.y-20);
     }
@@ -113,14 +151,13 @@ function update(){
     player.attacking=false;
   }
 
-  // ИИ (более умный)
+  // ИИ
   if(Math.random()<0.02){
-    if(enemy.x>player.x) enemy.x-=15;
-    else enemy.x+=15;
+    if(enemy.x>player.x) enemy.x-=20;
+    else enemy.x+=20;
   }
 
-  // атака врага
-  if(Math.abs(enemy.x-player.x)<35 && Math.random()<0.03){
+  if(Math.abs(enemy.x-player.x)<40 && Math.random()<0.03){
     player.hp-=2;
     addHit(player.x, player.y-20);
   }
@@ -130,14 +167,19 @@ function update(){
   if(enemy.hp<500) enemy.hp+=0.01;
 
   // границы
-  player.x=Math.max(20,Math.min(380,player.x));
-  enemy.x=Math.max(20,Math.min(380,enemy.x));
+  player.x=Math.max(20,Math.min(c.width-20,player.x));
+  enemy.x=Math.max(20,Math.min(c.width-20,enemy.x));
 
-  // проверка победы
+  // победа / поражение
   if(player.hp<=0){
     gameOver=true;
-    setTimeout(()=>{ round=1; gameOver=false; resetRound(); },2000);
+    setTimeout(()=>{
+      round=1;
+      gameOver=false;
+      resetRound();
+    },2000);
   }
+
   if(enemy.hp<=0){
     round++;
     resetRound();
@@ -153,48 +195,50 @@ function draw(){
 
   // земля
   ctx.fillStyle="#222";
-  ctx.fillRect(0,210,400,40);
+  ctx.fillRect(0,c.height-40,c.width,40);
 
   drawStick(player.x, player.y, player.attacking, "white");
   drawStick(enemy.x, enemy.y, false, "red");
 
-  // HP бары
+  // HP
   ctx.fillStyle="green";
-  ctx.fillRect(10,10,player.hp/2,10);
+  ctx.fillRect(20,20,player.hp/2,12);
 
   ctx.fillStyle="red";
-  ctx.fillRect(400-(enemy.hp/2)-10,10,enemy.hp/2,10);
+  ctx.fillRect(c.width-(enemy.hp/2)-20,20,enemy.hp/2,12);
 
   // текст
   ctx.fillStyle="white";
-  ctx.fillText("Раунд: "+round,170,25);
+  ctx.fillText("Раунд: "+round, c.width/2-30, 30);
 
   if(gameOver){
     ctx.fillStyle="red";
-    ctx.fillText("Ты проиграл!",150,120);
+    ctx.fillText("Ты проиграл!", c.width/2-50, c.height/2);
   }
 
-  // эффекты удара
+  // эффекты
   hits.forEach(h=>{
     ctx.fillStyle="yellow";
-    ctx.fillRect(h.x,h.y,5,5);
+    ctx.fillRect(h.x,h.y,6,6);
   });
 }
 
+// атаки с кнопок
 function attack(){
-  if(Math.abs(player.x-enemy.x)<40){
+  if(Math.abs(player.x-enemy.x)<50){
     enemy.hp-=2;
     addHit(enemy.x, enemy.y-20);
   }
 }
 
 function kick(){
-  if(Math.abs(player.x-enemy.x)<50){
+  if(Math.abs(player.x-enemy.x)<60){
     enemy.hp-=3;
     addHit(enemy.x, enemy.y-20);
   }
 }
 
+// игровой цикл
 function loop(){
   update();
   draw();
